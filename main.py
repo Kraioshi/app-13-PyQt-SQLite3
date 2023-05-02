@@ -1,7 +1,7 @@
 import sys
 import sqlite3
 from PyQt6.QtWidgets import QApplication, QVBoxLayout, QLabel, QWidget, QGridLayout, \
-     QLineEdit, QPushButton, QMainWindow, QTableWidget, QTableWidgetItem
+    QLineEdit, QPushButton, QMainWindow, QTableWidget, QTableWidgetItem, QDialog, QComboBox
 from PyQt6.QtGui import QAction
 
 
@@ -9,11 +9,14 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Student Management System")
+        self.setFixedWidth(500)
+        self.setFixedHeight(500)
 
         file_menu_item = self.menuBar().addMenu("&File")
         help_menu_item = self.menuBar().addMenu("&Help")
 
         add_student_action = QAction("Add Student", self)
+        add_student_action.triggered.connect(self.insert)
         file_menu_item.addAction(add_student_action)
 
         about_action = QAction("About", self)
@@ -38,7 +41,66 @@ class MainWindow(QMainWindow):
 
         connection.close()
 
+    def insert(self):
+        dialog = InsertDialog()
+        dialog.exec()
 
+
+class InsertDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Student Management System")
+        self.setFixedWidth(200)
+        self.setFixedHeight(300)
+
+        layout = QVBoxLayout()
+
+        # add name widget
+        self.name = QLineEdit()
+        self.name.setPlaceholderText("Name")
+        layout.addWidget(self.name)
+
+        # Add course combo box
+        self.course_name = QComboBox()
+        courses = ["Astronomy", "Biology", "Math", "Physics", ]
+        self.course_name.addItems(courses)
+        layout.addWidget(self.course_name)
+
+        # Add mobile widget
+        self.mobile = QLineEdit()
+        self.mobile.setPlaceholderText("Mobile")
+        layout.addWidget(self.mobile)
+
+        # Add submit button
+        submit = QPushButton("Submit")
+        submit.clicked.connect(self.add_student)
+        layout.addWidget(submit)
+
+        # Add cancel button
+        cancel = QPushButton("Cancel")
+        cancel.clicked.connect(self.closing)
+        layout.addWidget(cancel)
+
+        self.setLayout(layout)
+
+    def add_student(self):
+        name = self.name.text()
+        course = self.course_name.itemText(self.course_name.currentIndex())
+        mobile = self.mobile.text()
+        if name != "" and mobile != "":
+            connection = sqlite3.connect("database.db")
+            cursor = connection.cursor()
+            cursor.execute("INSERT INTO students (name, course, mobile) VALUES (?, ?, ?)",
+                           (name, course, mobile))
+            connection.commit()
+            cursor.close()
+            connection.close()
+            project.load_data()
+            self.closing()  # close after submit
+
+    # close Dialog window
+    def closing(self):   # Should be a better way idk?
+        self.accept()
 
 
 
@@ -47,5 +109,3 @@ project = MainWindow()
 project.load_data()
 project.show()
 sys.exit(app.exec())
-
-
