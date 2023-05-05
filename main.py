@@ -68,7 +68,6 @@ class MainWindow(QMainWindow):
         self.statusbar.addWidget(edit_button)
         self.statusbar.addWidget(delete_button)
 
-
     def load_data(self):
         connection = sqlite3.connect("database.db")
         result = connection.execute("SELECT * FROM students")
@@ -195,10 +194,52 @@ class SearchDialog(QDialog):
 
 
 class EditDialog(QDialog):
-    pass
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Update Management System")
+        self.setFixedWidth(200)
+        self.setFixedHeight(300)
+
+        layout = QVBoxLayout()
+
+        # Get student name from selected row
+        index = project.table.currentRow()
+
+        # add name widget
+        student_name = project.table.item(index, 1).text()  # (row_index, column)
+        self.name = QLineEdit(student_name)
+        self.name.setPlaceholderText("Name")
+        layout.addWidget(self.name)
+
+        # Add course combo box
+        course = project.table.item(index, 2).text()  # extracting course name from selected row
+        self.course_name = QComboBox()
+        courses = ["Astronomy", "Biology", "Math", "Physics", ]
+        self.course_name.addItems(courses)
+        self.course_name.setCurrentText(course)  # Select current course
+
+        layout.addWidget(self.course_name)
+
+        # Add mobile widget
+        mobile = project.table.item(index, 3).text()
+        self.mobile = QLineEdit(mobile)
+        self.mobile.setPlaceholderText("Mobile")
+        layout.addWidget(self.mobile)
+
+        # Add submit button
+        submit = QPushButton("Submit")
+        submit.clicked.connect(self.update_student)
+        layout.addWidget(submit)
+
+        self.setLayout(layout)
+
+    def update_student(self):
+        pass
+
 
 class DeleteDialog(QDialog):
     pass
+
 
 app = QApplication(sys.argv)
 project = MainWindow()
