@@ -231,6 +231,7 @@ class EditDialog(QDialog):
         submit.clicked.connect(self.update_student)
         layout.addWidget(submit)
 
+
         self.setLayout(layout)
 
     def update_student(self):
