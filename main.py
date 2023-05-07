@@ -2,7 +2,8 @@ import sys
 import sqlite3
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QVBoxLayout, QLabel, QWidget, QGridLayout, \
-    QLineEdit, QPushButton, QMainWindow, QTableWidget, QTableWidgetItem, QDialog, QComboBox, QToolBar, QStatusBar
+    QLineEdit, QPushButton, QMainWindow, QTableWidget, QTableWidgetItem, QDialog, QComboBox, QToolBar, QStatusBar, \
+    QMessageBox
 from PyQt6.QtGui import QAction, QIcon
 
 
@@ -249,12 +250,53 @@ class EditDialog(QDialog):
         connection.commit()
         cursor.close()
         connection.close()
+
         # to refresh the table data, calling load_data()
         project.load_data()
+        self.accept()
 
 
 class DeleteDialog(QDialog):
-    pass
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Update Management System")
+
+        layout = QGridLayout()
+        confirmation_message = QLabel("Are you sure you want to delete?")
+        yes = QPushButton("Yes")
+        no = QPushButton("No")
+
+        layout.addWidget(confirmation_message, 0, 0, 1, 2)
+        layout.addWidget(yes, 1, 0)
+        layout.addWidget(no, 1, 1)
+        self.setLayout(layout)
+
+        yes.clicked.connect(self.delete_student)
+        no.clicked.connect(self.accept)
+
+    def delete_student(self):
+        # get selected row's index and student id
+        index = project.table.currentRow()
+        student_id = project.table.item(index, 0).text()
+
+        connection = sqlite3.connect("database.db")
+        cursor = connection.cursor()
+
+        # Making sure to add a comma in the tuple, because if there is no a single comma, it won't be read as tuple
+        cursor.execute("DELETE from students WHERE id = ?", (student_id, ))
+        connection.commit()
+        cursor.close()
+        connection.close()
+
+        # Refreshing table
+        project.load_data()
+
+        self.close()
+
+        confirmation_message = QMessageBox()
+        confirmation_message.setWindowTitle("Success")
+        confirmation_message.setText("The record was deleted successfully")
+        confirmation_message.exec()
 
 
 app = QApplication(sys.argv)
