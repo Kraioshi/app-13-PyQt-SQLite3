@@ -211,6 +211,9 @@ class EditDialog(QDialog):
         self.name.setPlaceholderText("Name")
         layout.addWidget(self.name)
 
+        # get id from selected row
+        self.student_id = project.table.item(index, 0).text()
+
         # Add course combo box
         course = project.table.item(index, 2).text()  # extracting course name from selected row
         self.course_name = QComboBox()
@@ -226,16 +229,28 @@ class EditDialog(QDialog):
         self.mobile.setPlaceholderText("Mobile")
         layout.addWidget(self.mobile)
 
-        # Add submit button
-        submit = QPushButton("Submit")
+        # Add update button
+        submit = QPushButton("Update")
         submit.clicked.connect(self.update_student)
         layout.addWidget(submit)
-
 
         self.setLayout(layout)
 
     def update_student(self):
-        pass
+        connection = sqlite3.connect("database.db")
+        cursor = connection.cursor()
+        cursor.execute("UPDATE students SET name = ?, course = ?, mobile = ? WHERE id = ?",
+                       (self.name.text(),
+                        self.course_name.itemText(self.course_name.currentIndex()),
+                        self.mobile.text(),
+                        self.student_id))
+
+        # don't forget to commit :D
+        connection.commit()
+        cursor.close()
+        connection.close()
+        # to refresh the table data, calling load_data()
+        project.load_data()
 
 
 class DeleteDialog(QDialog):
