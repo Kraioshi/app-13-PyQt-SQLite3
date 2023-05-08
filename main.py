@@ -7,6 +7,15 @@ from PyQt6.QtWidgets import QApplication, QVBoxLayout, QLabel, QWidget, QGridLay
 from PyQt6.QtGui import QAction, QIcon
 
 
+class DatabaseConnection:
+    def __init__(self, database_file="database.db"):
+        self.database_file = database_file
+
+    def connect(self):
+        connection = sqlite3.connect(self.database_file)
+        return connection
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -71,7 +80,7 @@ class MainWindow(QMainWindow):
         self.statusbar.addWidget(delete_button)
 
     def load_data(self):
-        connection = sqlite3.connect("database.db")
+        connection = DatabaseConnection().connect()
         result = connection.execute("SELECT * FROM students")
 
         self.table.setRowCount(0)
@@ -107,11 +116,12 @@ class MainWindow(QMainWindow):
 class AboutDialog(QMessageBox):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("About")
+        self.setWindowTitle("Very important info")
         message = """
-        I made this app while learning PyQt6.
-        So feel free to do whatever you want with this.
-        """
+I made this app while learning PyQt6.
+Feel free to do whatever you want with this.
+Very important info, isn't it? =)
+"""
         self.setText(message)
 
 
@@ -157,7 +167,7 @@ class InsertDialog(QDialog):
         course = self.course_name.itemText(self.course_name.currentIndex())
         mobile = self.mobile.text()
         if name != "" and mobile != "":
-            connection = sqlite3.connect("database.db")
+            connection = DatabaseConnection().connect()
             cursor = connection.cursor()
             cursor.execute("INSERT INTO students (name, course, mobile) VALUES (?, ?, ?)",
                            (name, course, mobile))
@@ -177,25 +187,35 @@ class SearchDialog(QDialog):
         super().__init__()
 
         self.setWindowTitle("Search Student")
-        self.setFixedHeight(300)
-        self.setFixedWidth(300)
+        self.setFixedHeight(100)
+        self.setFixedWidth(250)
 
-        layout = QVBoxLayout()
+        # layout = QVBoxLayout()
+        grid = QGridLayout()
 
         self.student_name = QLineEdit()
         self.student_name.setPlaceholderText("Name")
-        layout.addWidget(self.student_name)
+        # layout.addWidget(self.student_name)
+        grid.addWidget(self.student_name, 0, 0, 1, 2)
 
         search_button = QPushButton("Search")
-        layout.addWidget(search_button)
+        # layout.addWidget(search_button)
         search_button.clicked.connect(self.search)
+        grid.addWidget(search_button, 1, 0)
 
-        self.setLayout(layout)
+        close_button = QPushButton("Close")
+        close_button.clicked.connect(self.close)
+        grid.addWidget(close_button, 1, 1)
+        # layout.addWidget(close_button)
+
+        self.setLayout(grid)
+        # self.setLayout(layout)
 
     def search(self):
         name = self.student_name.text()
         # Search in DB to print in the screen
-        connection = sqlite3.connect("database.db")
+
+        connection = DatabaseConnection().connect()
         cursor = connection.cursor()
         result = cursor.execute("SELECT * FROM students WHERE name = ?", (name,))
         rows = list(result)
@@ -254,7 +274,7 @@ class EditDialog(QDialog):
         self.setLayout(layout)
 
     def update_student(self):
-        connection = sqlite3.connect("database.db")
+        connection = DatabaseConnection().connect()
         cursor = connection.cursor()
         cursor.execute("UPDATE students SET name = ?, course = ?, mobile = ? WHERE id = ?",
                        (self.name.text(),
@@ -295,11 +315,11 @@ class DeleteDialog(QDialog):
         index = project.table.currentRow()
         student_id = project.table.item(index, 0).text()
 
-        connection = sqlite3.connect("database.db")
+        connection = DatabaseConnection().connect()
         cursor = connection.cursor()
 
         # Making sure to add a comma in the tuple, because if there is no a single comma, it won't be read as tuple
-        cursor.execute("DELETE from students WHERE id = ?", (student_id, ))
+        cursor.execute("DELETE from students WHERE id = ?", (student_id,))
         connection.commit()
         cursor.close()
         connection.close()
